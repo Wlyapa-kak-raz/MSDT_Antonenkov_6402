@@ -16,7 +16,7 @@ LR = 0.001
 
 class Agent:
     def __init__(self):
-        self.n_game = 0
+        self.game_count = 0
         self.epsilon = 0  # Randomness
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
@@ -40,40 +40,40 @@ class Agent:
     def get_state(self, game):
         head = game.snake[0]
 
-        point_l = Point(head.x - BLOCK_SIZE, head.y)
-        point_r = Point(head.x + BLOCK_SIZE, head.y)
-        point_u = Point(head.x, head.y - BLOCK_SIZE)
-        point_d = Point(head.x, head.y + BLOCK_SIZE)
+        point_left = Point(head.x - BLOCK_SIZE, head.y)
+        point_right = Point(head.x + BLOCK_SIZE, head.y)
+        point_up = Point(head.x, head.y - BLOCK_SIZE)
+        point_down = Point(head.x, head.y + BLOCK_SIZE)
 
-        dir_l = game.direction == Direction.LEFT
-        dir_r = game.direction == Direction.RIGHT
-        dir_u = game.direction == Direction.UP
-        dir_d = game.direction == Direction.DOWN
+        direction_left = game.direction == Direction.LEFT
+        direction_right = game.direction == Direction.RIGHT
+        direction_up = game.direction == Direction.UP
+        direction_down = game.direction == Direction.DOWN
 
         state = [
             # Danger Straight
-            (dir_u and game.is_collision(point_u))
-            or (dir_d and game.is_collision(point_d))
-            or (dir_l and game.is_collision(point_l))
-            or (dir_r and game.is_collision(point_r)),
+            (direction_up and game.is_collision(point_up))
+            or (direction_down and game.is_collision(point_down))
+            or (direction_left and game.is_collision(point_left))
+            or (direction_right and game.is_collision(point_right)),
 
             # Danger right
-            (dir_u and game.is_collision(point_r))
-            or (dir_d and game.is_collision(point_l))
-            or (dir_u and game.is_collision(point_u))
-            or (dir_d and game.is_collision(point_d)),
+            (direction_up and game.is_collision(point_right))
+            or (direction_down and game.is_collision(point_left))
+            or (direction_up and game.is_collision(point_up))
+            or (direction_down and game.is_collision(point_down)),
 
             #Danger Left
-            (dir_u and game.is_collision(point_r))
-            or (dir_d and game.is_collision(point_l))
-            or (dir_r and game.is_collision(point_u))
-            or (dir_l and game.is_collision(point_d)),
+            (direction_up and game.is_collision(point_right))
+            or (direction_down and game.is_collision(point_left))
+            or (direction_right and game.is_collision(point_up))
+            or (direction_left and game.is_collision(point_down)),
 
             # Move Direction
-            dir_l,
-            dir_r,
-            dir_u,
-            dir_d,
+            direction_left,
+            direction_right,
+            direction_up,
+            direction_down,
 
             #Food Location
             game.food.x < game.head.x,  # food is in left
@@ -101,15 +101,15 @@ class Agent:
 
     def get_action(self, state):
         # random moves: tradeoff explotation / exploitation
-        self.epsilon = 80 - self.n_game
+        self.epsilon = 80 - self.game_count
         final_move = [0, 0, 0]
 
         if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = torch.tensor(state, dtype=torch.float).cuda()
-            prediction = self.model(state0).cuda()  # prediction by model
+            state_tensor = torch.tensor(state, dtype=torch.float).cuda()
+            prediction = self.model(state_tensor).cuda()  # prediction by model
             move = torch.argmax(prediction).item()
             final_move[move] = 1
 
@@ -144,18 +144,18 @@ def train():
         if done:
             # Train long memory,plot result
             game.reset()
-            agent.n_game += 1
+            agent.game_count += 1
             agent.train_long_memory()
 
             if score > reward:  # new High score
                 reward = score
                 agent.model.save()
 
-            print('Game:', agent.n_game, 'Score:', score, 'Record:', record)
+            print('Game:', agent.game_count, 'Score:', score, 'Record:', record)
 
             plot_scores.append(score)
             total_score += score
-            mean_score = total_score / agent.n_game
+            mean_score = total_score / agent.game_count
             plot_mean_scores.append(mean_score)
             plot(plot_scores, plot_mean_scores)
 
