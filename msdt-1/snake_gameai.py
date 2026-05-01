@@ -22,6 +22,7 @@ class Direction(Enum):
     UP = 3
     DOWN = 4
  
+ 
 Point = namedtuple('Point', 'x , y')
 
 BLOCK_SIZE = 20
@@ -31,6 +32,7 @@ RED = (200, 0, 0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
+
 
 class SnakeGameAI:
     def __init__(self, w=640, h=480):
@@ -43,6 +45,7 @@ class SnakeGameAI:
         
         #init game state
         self.reset()
+
     def reset(self):
         self.direction = Direction.RIGHT
         self.head = Point(self.w / 2, self.h / 2)
@@ -54,14 +57,12 @@ class SnakeGameAI:
         self._place__food()
         self.frame_iteration = 0
       
-
     def _place__food(self):
         x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
         y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
         self.food = Point(x, y)
         if self.food in self.snake:
             self._place__food()
-
 
     def play_step(self, action):
         self.frame_iteration += 1

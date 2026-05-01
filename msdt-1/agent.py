@@ -13,6 +13,7 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
+
 class Agent:
     def __init__(self):
         self.n_game = 0
@@ -114,6 +115,7 @@ class Agent:
 
         return final_move
 
+
 def train():
     plot_scores = []
     plot_mean_scores = []
@@ -121,6 +123,7 @@ def train():
     record = 0
     agent = Agent()
     game = SnakeGameAI()
+
     while True:
         # Get Old state
         state_old = agent.get_state(game)
