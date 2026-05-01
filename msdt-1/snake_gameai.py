@@ -9,14 +9,10 @@ import pygame
 pygame.init()
 font = pygame.font.Font('arial.ttf', 25)
 
-# Reset 
-# Reward
-# Play(action) -> Direction
-# Game_Iteration
-# is_collision
-
 
 class Direction(Enum):
+    """Possible movement directions."""
+
     RIGHT = 1
     LEFT = 2
     UP = 3
@@ -35,18 +31,18 @@ BLACK = (0, 0, 0)
 
 
 class SnakeGameAI:
+    """Snake game environment for AI training."""
+
     def __init__(self, w=640, h=480):
         self.width = w
         self.height = h
-        #init display
         self.display = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
-        
-        #init game state
         self.reset()
 
     def reset(self):
+        """Reset the game state."""
         self.direction = Direction.RIGHT
         self.head = Point(self.width / 2, self.height / 2)
         self.snake = [self.head,
@@ -58,6 +54,7 @@ class SnakeGameAI:
         self.frame_iteration = 0
       
     def _place__food(self):
+        """Place food at a random position."""
         x = random.randint(0, (self.width - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
         y = random.randint(0, (self.height - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
         self.food = Point(x, y)
@@ -65,41 +62,39 @@ class SnakeGameAI:
             self._place__food()
 
     def play_step(self, action):
+        """Process one game step and return reward, status and score."""
         self.frame_iteration += 1
-        # 1. Collect the user input
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
             
-        # 2. Move
         self._move(action)
         self.snake.insert(0, self.head)
 
-        # 3. Check if game Over
-        reward = 0  # eat food: +10 , game over: -10 , else: 0
+        reward = 0
         game_over = False 
+
         if self.is_collision() or self.frame_iteration > 100 * len(self.snake):
             game_over = True
             reward = -10
             return reward, game_over, self.score
-        # 4. Place new Food or just move
+
         if self.head == self.food:
             self.score += 1
             reward = 10
             self._place__food()
-            
         else:
             self.snake.pop()
         
-        # 5. Update UI and clock
         self._update_ui()
         self.clock.tick(SPEED)
-        # 6. Return game Over and Display Score
         
         return reward, game_over, self.score
 
     def _update_ui(self):
+        """Update the game window."""
         self.display.fill(BLACK)
         for point in self.snake:
             pygame.draw.rect(self.display, BLUE1, pygame.Rect(point.x, point.y, BLOCK_SIZE, BLOCK_SIZE))
@@ -110,25 +105,24 @@ class SnakeGameAI:
         pygame.display.flip()
 
     def _move(self, action):
-        # Action
-        # [1,0,0] -> Straight
-        # [0,1,0] -> Right Turn 
-        # [0,0,1] -> Left Turn
-
+        """Update snake direction according to selected action."""
         clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
         index = clock_wise.index(self.direction)
+
         if np.array_equal(action, [1, 0, 0]):
             new_dir = clock_wise[index]
         elif np.array_equal(action, [0, 1, 0]):
             next_index = (index + 1) % 4
-            new_dir = clock_wise[next_index] # right Turn
+            new_dir = clock_wise[next_index]
         else:
             next_index = (index - 1) % 4
-            new_dir = clock_wise[next_index] # Left Turn
+            new_dir = clock_wise[next_index]
+
         self.direction = new_dir
 
         x = self.head.x
         y = self.head.y
+
         if self.direction == Direction.RIGHT:
             x += BLOCK_SIZE
         elif self.direction == Direction.LEFT:
@@ -137,14 +131,18 @@ class SnakeGameAI:
             y += BLOCK_SIZE
         elif self.direction == Direction.UP:
             y -= BLOCK_SIZE
+
         self.head = Point(x, y)
 
     def is_collision(self, point=None):
+        """Return True if the snake hits boundary or itself."""
         if point is None:
             point = self.head
-        #hit boundary
+
         if point.x > self.width - BLOCK_SIZE or point.x < 0 or point.y > self.height - BLOCK_SIZE or point.y < 0:
             return True
+
         if point in self.snake[1:]:
             return True
+
         return False
