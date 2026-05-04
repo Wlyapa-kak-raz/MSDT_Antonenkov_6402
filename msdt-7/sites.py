@@ -4,11 +4,13 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-from aiohttp import ClientSession, ClientError
+from aiohttp import ClientError, ClientSession
 
 
 @dataclass
 class SiteResult:
+    """Хранит результат проверки одного сайта."""
+
     url: str
     status: Optional[int]
     response_time: Optional[float]
@@ -16,6 +18,7 @@ class SiteResult:
 
 
 async def check_site(session: ClientSession, url: str) -> SiteResult:
+    """Проверяет доступность сайта и возвращает статус, время ответа или ошибку."""
     start_time = time.perf_counter()
 
     try:
@@ -48,6 +51,7 @@ async def check_site(session: ClientSession, url: str) -> SiteResult:
 
 
 async def check_sites(urls: list[str]) -> list[SiteResult]:
+    """Асинхронно запускает проверку списка сайтов."""
     async with ClientSession() as session:
         tasks = []
 
@@ -61,6 +65,7 @@ async def check_sites(urls: list[str]) -> list[SiteResult]:
 
 
 def print_results(results: list[SiteResult]) -> None:
+    """Выводит результаты проверки сайтов в консоль."""
     print("Результаты проверки сайтов:\n")
 
     for result in results:
@@ -74,21 +79,24 @@ def print_results(results: list[SiteResult]) -> None:
 
 
 def save_results(results: list[SiteResult], filename: str) -> None:
+    """Сохраняет результаты проверки сайтов в CSV-файл."""
     with open(filename, "w", encoding="utf-8", newline="") as file:
         writer = csv.writer(file, delimiter=";")
-
         writer.writerow(["url", "status", "response_time", "error"])
 
         for result in results:
-            writer.writerow([
-                result.url,
-                result.status,
-                result.response_time,
-                result.error,
-            ])
+            writer.writerow(
+                [
+                    result.url,
+                    result.status,
+                    result.response_time,
+                    result.error,
+                ]
+            )
 
 
 def analyze_results(results: list[SiteResult]) -> None:
+    """Подсчитывает и выводит краткую статистику по результатам проверки."""
     successful = [result for result in results if result.error is None]
     failed = [result for result in results if result.error is not None]
 
@@ -106,6 +114,7 @@ def analyze_results(results: list[SiteResult]) -> None:
 
 
 async def main() -> None:
+    """Запускает проверку сайтов, выводит статистику и сохраняет результат."""
     urls = [
         "https://www.google.com",
         "https://www.github.com",
